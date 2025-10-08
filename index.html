@@ -140,10 +140,59 @@ createOfferBtn.onclick=async()=>{
   offerBox.value=text;
   showQR(text);
   alert("Share this QR code or Offer text with the other peer.");
+
 };
 
+createAnswerBtn.onclick=async()=>{
+  await initConnection();
+  const offer=JSON.parse(offerBox.value);
+  await pc.setRemoteDescription(offer);
+  const answer=await pc.createAnswer();await pc.setLocalDescription(answer);
+  const text=JSON.stringify(answer);
+  answerBox.value=text;
+  showQR(text);
+  alert("Share this Answer QR with the caller.");
+};
 
+addAnswerBtn.onclick=async()=>{
+  const ans=JSON.parse(answerBox.value);
+  if(!pc.currentRemoteDescription){await pc.setRemoteDescription(ans);alert("Answer added! Call should connect.");}
+};
 
+endCallBtn.onclick=()=>{if(localStream)localStream.getTracks().forEach(t=>t.stop());if(pc)pc.close();callModal.classList.add("hidden");qrcode.innerHTML='';};
+
+/* --- QR helpers --- */
+function showQR(text){
+  qrcode.innerHTML="";
+  QRCode.toCanvas(document.createElement("canvas"),text,{width:200},(err,canvas)=>{
+    if(!err)qrcode.appendChild(canvas);
+  });
+}
+
+/* --- QR Scanner --- */
+async function startScanner(target){
+  qrcode.innerHTML="";
+  scanner.classList.remove("hidden");
+  if(html5QrCode){await html5QrCode.stop();}
+  html5QrCode=new Html5Qrcode("reader");
+  await html5QrCode.start(
+    {facingMode:"environment"},
+    {fps:10,qrbox:250},
+    (decodedText)=>{
+      if(target==="offer")offerBox.value=decodedText;
+      else answerBox.value=decodedText;
+      stopScanner();
+      alert("QR Scanned!");
+    },
+    (err)=>{}
+  );
+}
+async function stopScanner(){
+  if(html5QrCode){await html5QrCode.stop();html5QrCode.clear();}
+  scanner.classList.add("hidden");
+}
+scanOfferBtn.onclick=()=>startScanner("offer");
+scanAnswerBtn.onclick=()=>startScanner("answer");
 
 </script>
 </body>

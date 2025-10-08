@@ -83,3 +83,68 @@
     <button id="saveProfileBtn" class="bg-green-600 px-4 py-2 rounded-lg">Save</button>
   </div>
 </div>
+<script>
+/* --- Background animation --- */
+const canvas=document.getElementById('bg'),ctx=canvas.getContext('2d');
+function resize(){canvas.width=innerWidth;canvas.height=innerHeight;}resize();window.addEventListener('resize',resize);
+const p=[];for(let i=0;i<100;i++){p.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height,r:Math.random()*2+1,dx:(Math.random()-0.5),dy:(Math.random()-0.5)});}
+function animate(){ctx.fillStyle="rgba(0,0,20,0.3)";ctx.fillRect(0,0,canvas.width,canvas.height);ctx.fillStyle="rgba(0,150,255,0.9)";
+p.forEach(x=>{ctx.beginPath();ctx.arc(x.x,x.y,x.r,0,Math.PI*2);ctx.fill();x.x+=x.dx;x.y+=x.dy;if(x.x<0||x.x>canvas.width)x.dx*=-1;if(x.y<0||x.y>canvas.height)x.dy*=-1;});
+requestAnimationFrame(animate);}animate();
+
+/* --- Auth Simulation --- */
+let currentUser=null,currentProfile=null;
+const loginForm=document.getElementById("loginForm"),loginCard=document.getElementById("loginCard"),
+dashboard=document.getElementById("dashboard"),dashboardTitle=document.getElementById("dashboardTitle"),
+dashboardContent=document.getElementById("dashboardContent"),profileModal=document.getElementById("profileModal"),
+doctorFields=document.getElementById("doctorFields"),profileBtn=document.getElementById("profileBtn"),
+saveProfileBtn=document.getElementById("saveProfileBtn"),logoutBtn=document.getElementById("logoutBtn");
+
+loginForm.addEventListener("submit",e=>{
+  e.preventDefault();
+  currentProfile=document.getElementById("profile").value;
+  currentUser={email:document.getElementById("email").value};
+  loginCard.style.display="none";dashboard.classList.remove("hidden");
+  dashboardTitle.textContent=currentProfile==="doctor"?"👨‍⚕ Doctor Dashboard":"🩺 Patient Dashboard";
+  dashboardContent.innerHTML=`<button id='startCall' class='bg-blue-500 px-4 py-2 rounded-lg'>🎥 Start Call</button>`;
+  document.getElementById("startCall").onclick=()=>callModal.classList.remove("hidden");
+  profileModal.classList.remove("hidden");if(currentProfile==="doctor")doctorFields.classList.remove("hidden");
+});
+logoutBtn.onclick=()=>{dashboard.classList.add("hidden");loginCard.style.display="block";};
+profileBtn.onclick=()=>profileModal.classList.remove("hidden");
+saveProfileBtn.onclick=()=>{profileModal.classList.add("hidden");alert("Profile saved!");};
+
+/* --- WebRTC + QR --- */
+const callModal=document.getElementById("callModal");
+const localVideo=document.getElementById("localVideo"),remoteVideo=document.getElementById("remoteVideo");
+const offerBox=document.getElementById("offer"),answerBox=document.getElementById("answer");
+const createOfferBtn=document.getElementById("createOfferBtn"),createAnswerBtn=document.getElementById("createAnswerBtn"),
+addAnswerBtn=document.getElementById("addAnswerBtn"),endCallBtn=document.getElementById("endCallBtn"),
+qrcode=document.getElementById("qrcode"),scanner=document.getElementById("scanner"),
+scanOfferBtn=document.getElementById("scanOfferBtn"),scanAnswerBtn=document.getElementById("scanAnswerBtn");
+let pc,localStream,html5QrCode;
+
+async function initConnection(){
+  pc=new RTCPeerConnection();
+  pc.onicecandidate=e=>console.log("ICE:",e.candidate);
+  pc.ontrack=e=>{remoteVideo.srcObject=e.streams[0];};
+  localStream=await navigator.mediaDevices.getUserMedia({video:true,audio:true});
+  localVideo.srcObject=localStream;
+  localStream.getTracks().forEach(t=>pc.addTrack(t,localStream));
+}
+
+createOfferBtn.onclick=async()=>{
+  await initConnection();
+  const offer=await pc.createOffer();await pc.setLocalDescription(offer);
+  const text=JSON.stringify(offer);
+  offerBox.value=text;
+  showQR(text);
+  alert("Share this QR code or Offer text with the other peer.");
+};
+
+
+
+
+</script>
+</body>
+</html>

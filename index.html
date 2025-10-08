@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hospital ERP – Local WebRTC + QR</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+<script src="https://unpkg.com/html5-qrcode@2.3.9/minified/html5-qrcode.min.js"></script>
+<style>
+  body,html{margin:0;padding:0;height:100%;font-family:sans-serif;overflow:hidden;}
+  canvas{position:fixed;top:0;left:0;width:100%;height:100%;z-index:-1;}
+  .glow{text-shadow:0 0 15px #00f,0 0 30px #00f,0 0 45px #00f;}
+  video{width:280px;border-radius:1rem;margin:0.5rem;background:#000;}
+</style>
+</head>
+<body class="flex items-center justify-center min-h-screen text-white">
+
+<canvas id="bg"></canvas>
+
+<!-- Login -->
+<div id="loginCard" class="bg-white/10 backdrop-blur-lg rounded-2xl shadow-2xl p-8 w-96 border border-white/20">
+  <h2 class="text-3xl font-bold mb-6 text-center glow">Hospital ERP</h2>
+  <form id="loginForm" class="flex flex-col gap-4">
+    <select id="profile" class="p-3 rounded-xl bg-white/20 text-white border border-white/30">
+      <option value="patient">Patient</option>
+      <option value="doctor">Doctor</option>
+    </select>
+    <input type="email" id="email" placeholder="Email" class="p-3 rounded-xl bg-white/20 text-white border border-white/30" required>
+    <input type="password" id="password" placeholder="Password" class="p-3 rounded-xl bg-white/20 text-white border border-white/30" required>
+    <button type="submit" class="bg-blue-600 hover:bg-blue-700 p-3 rounded-xl text-white font-bold">Login</button>
+  </form>
+</div>
+
+<!-- Dashboard -->
+<div id="dashboard" class="hidden flex-col items-center p-10 w-full h-full overflow-auto">
+  <h1 id="dashboardTitle" class="text-4xl font-bold mb-6 glow"></h1>
+  <div id="dashboardContent" class="w-full max-w-4xl"></div>
+  <div class="mt-6 flex gap-4">
+    <button id="profileBtn" class="bg-yellow-600 px-4 py-2 rounded-lg">Edit Profile</button>
+    <button id="logoutBtn" class="bg-red-600 px-4 py-2 rounded-lg">Logout</button>
+  </div>
+</div>
+
+<!-- Call Modal -->
+<div id="callModal" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center">
+  <div class="bg-white/10 p-6 rounded-2xl text-center w-[90%] max-w-2xl">
+    <h2 class="text-xl mb-4">📞 WebRTC Call</h2>
+    <div class="flex justify-center flex-wrap">
+      <video id="localVideo" autoplay muted playsinline></video>
+      <video id="remoteVideo" autoplay playsinline></video>
+    </div>
+
+    <div class="mt-4 grid grid-cols-2 gap-4">
+      <textarea id="offer" placeholder="Offer (copy or scan)" class="w-full h-24 rounded-lg text-black p-2"></textarea>
+      <textarea id="answer" placeholder="Answer (copy or scan)" class="w-full h-24 rounded-lg text-black p-2"></textarea>
+    </div>
+
+    <div class="mt-4 flex justify-center flex-wrap gap-3">
+      <button id="createOfferBtn" class="bg-green-600 px-3 py-2 rounded-lg">Create Offer</button>
+      <button id="createAnswerBtn" class="bg-blue-600 px-3 py-2 rounded-lg">Create Answer</button>
+      <button id="addAnswerBtn" class="bg-yellow-600 px-3 py-2 rounded-lg">Add Answer</button>
+      <button id="scanOfferBtn" class="bg-purple-600 px-3 py-2 rounded-lg">Scan Offer</button>
+      <button id="scanAnswerBtn" class="bg-purple-600 px-3 py-2 rounded-lg">Scan Answer</button>
+      <button id="endCallBtn" class="bg-red-600 px-3 py-2 rounded-lg">End</button>
+    </div>
+
+    <div id="qrcode" class="mt-4 flex justify-center"></div>
+    <div id="scanner" class="hidden mt-4 flex justify-center">
+      <div id="reader" style="width:300px;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Profile Modal -->
+<div id="profileModal" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center">
+  <div class="bg-white/10 p-6 rounded-2xl text-center w-[90%] max-w-md">
+    <h2 class="text-xl mb-4">👤 Setup Profile</h2>
+    <input id="nameInput" placeholder="Full Name" class="w-full mb-3 px-3 py-2 rounded-lg text-black" />
+    <div id="doctorFields" class="hidden">
+      <input id="specializationInput" placeholder="Specialization (e.g., Cardiology)" class="w-full mb-3 px-3 py-2 rounded-lg text-black" />
+    </div>
+    <button id="saveProfileBtn" class="bg-green-600 px-4 py-2 rounded-lg">Save</button>
+  </div>
+</div>
